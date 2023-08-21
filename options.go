@@ -2,6 +2,23 @@ package circuitbreaker
 
 import "time"
 
+const (
+	// DefaultOpenWindow is time window of open state.
+	DefaultOpenWindow = time.Second * 60
+
+	// DefaultHalfOpenWindow is time widow of half open state.
+	DefaultHalfOpenWindow = DefaultOpenWindow / 2
+
+	// DefaultFailureRateThreshold is circuit max Failure Rate Threshold, to open circuit.
+	DefaultFailureRateThreshold int64 = 50
+
+	// DefaultSuccessRateThreshold is circuit max Success Rate Threshold, to close circuit.
+	DefaultSuccessRateThreshold int64 = 10
+
+	// DefaultState is state that used and default.
+	DefaultState state = StateClose
+)
+
 // Options is circuit breaker options.
 type Options struct {
 	Storage Storage
