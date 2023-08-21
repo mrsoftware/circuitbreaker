@@ -28,10 +28,6 @@ type MemoryStorage struct {
 
 // Failure is responsible to store failures.
 func (m *MemoryStorage) Failure(ctx context.Context, delta int64) error {
-	if delta == 0 {
-		delta = 1
-	}
-
 	m.lastErrorAt.Store(time.Now().UTC())
 
 	// open the circuit if we got too many failure.
@@ -44,10 +40,6 @@ func (m *MemoryStorage) Failure(ctx context.Context, delta int64) error {
 
 // Success is responsible to store success.
 func (m *MemoryStorage) Success(ctx context.Context, delta int64) error {
-	if delta == 0 {
-		delta = 1
-	}
-
 	if state(m.state.Load()) == StateClose {
 		return nil
 	}

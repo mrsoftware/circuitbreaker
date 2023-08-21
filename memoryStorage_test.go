@@ -9,17 +9,6 @@ import (
 )
 
 func TestMemoryStorageStorage_Failure(t *testing.T) {
-	t.Run("expected to increment 1 in case of passing 0", func(t *testing.T) {
-		ms := NewMemoryStorage(Options{FailureRateThreshold: 10})
-
-		err := ms.Failure(context.Background(), 0)
-		assert.Nil(t, err)
-		assert.Equal(t, int64(1), ms.failures.Load())
-		assert.Equal(t, time.Now().UTC().Minute(), ms.lastErrorAt.Load().(time.Time).Minute())
-		assert.Equal(t, StateClose, state(ms.state.Load()))
-		assert.Equal(t, int64(0), ms.success.Load())
-	})
-
 	t.Run("expected to increment the failure count and last error at", func(t *testing.T) {
 		ms := NewMemoryStorage(Options{FailureRateThreshold: 10})
 
