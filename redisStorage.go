@@ -69,7 +69,7 @@ func (r *RedisStorage) pipeExec(ctx context.Context, pipe redis.Pipeliner) error
 // if key expired or not exits == close
 // if we are in halfOpen window == halfOpen
 // if key exist and not in halfOpen window and errors count reached the limit == open.
-func (r *RedisStorage) GetState(ctx context.Context) (state, error) {
+func (r *RedisStorage) GetState(ctx context.Context) (State, error) {
 	duration, err := r.client.PTTL(ctx, namespace(r.options.Service)).Result()
 	if err != nil {
 		return StateClose, err

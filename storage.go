@@ -9,7 +9,7 @@ import (
 type Storage interface {
 	Failure(ctx context.Context, delta int64) error
 	Success(ctx context.Context, delta int64) error
-	GetState(ctx context.Context) (state, error)
+	GetState(ctx context.Context) (State, error)
 	Reset(ctx context.Context) error
 }
 

@@ -1,6 +1,9 @@
 package circuitbreaker
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 const (
 	// DefaultOpenWindow is time window of open state.
@@ -16,7 +19,7 @@ const (
 	DefaultSuccessRateThreshold int64 = 10
 
 	// DefaultState is state that used and default.
-	DefaultState state = StateClose
+	DefaultState State = StateClose
 )
 
 // Options is circuit breaker options.
@@ -24,7 +27,7 @@ type Options struct {
 	Storage Storage
 	Logger  Logger
 	Service string
-	State   state
+	State   State
 	// FailureRateThreshold haw many error to consider circuit as open
 	FailureRateThreshold int64
 	// SuccessRateThreshold how much success to consider circuit as full close
@@ -37,10 +40,16 @@ type Options struct {
 	// TODO 03.04.22 mrsoftware: do we need error weight?
 }
 
-// Logger for circuit breaker.
-type Logger interface {
-	Error(msg string, args ...interface{})
-	Warn(msg string, args ...interface{})
+func WithDefaultOptions() Option {
+	return func(o *Options) {
+		o.OpenWindow = DefaultHalfOpenWindow
+		o.HalfOpenWindow = DefaultHalfOpenWindow
+		o.FailureRateThreshold = DefaultFailureRateThreshold
+		o.SuccessRateThreshold = DefaultSuccessRateThreshold
+		o.State = DefaultState
+		o.Storage = NewMemoryStorage(o)
+		o.Logger = NewIOLogger(os.Stdout, OutPutTypeSimple)
+	}
 }
 
 type Option func(*Options)
@@ -63,7 +72,7 @@ func WithLogger(logger Logger) Option {
 	}
 }
 
-func WithDefaultState(state state) Option {
+func WithDefaultState(state State) Option {
 	return func(o *Options) {
 		o.State = state
 	}

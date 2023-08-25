@@ -1,11 +1,11 @@
 package circuitbreaker
 
 // State is circuit state.
-type state int64
+type State int64
 
 const (
 	// StateClose mean circuit is close and can accept request.
-	StateClose state = iota
+	StateClose State = iota
 
 	// StateOpen mean circuit is open and can not accept request.
 	StateOpen
@@ -22,7 +22,7 @@ const (
 )
 
 // GetStateText of circuit breaker.
-func GetStateText(state state) string {
+func GetStateText(state State) string {
 	switch state {
 	case StateClose:
 		return stateCloseText
