@@ -30,12 +30,29 @@ func NewCircuit(options ...Option) Circuit {
 	return circuit
 }
 
+// Stat is used for monitoring.
+type Stat interface {
+	GetState() State
+}
+
 // Manager is Circuit Breaker manager.
 type Manager interface {
 	Is(ctx context.Context, state State) bool
 	IsAvailable(ctx context.Context) bool
 	Done(ctx context.Context, err error)
 	Do(ctx context.Context, fn Fn) (interface{}, error)
+}
+
+// GetState is used to get the circuit breaker state.
+func (s *Circuit) GetState(ctx context.Context) State {
+	state, err := s.ops.Storage.GetState(ctx)
+	if err != nil {
+		s.ops.Logger.Error(fmt.Errorf("getting state: %w", err))
+
+		return StateUnknown
+	}
+
+	return state
 }
 
 // IsAvailable checks if the service is available.

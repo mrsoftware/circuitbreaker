@@ -12,6 +12,9 @@ const (
 
 	// StateHalfOpen mean circuit is half open and can accept request.
 	StateHalfOpen
+
+	// StateUnknown mean we can not calculate the state.
+	StateUnknown
 )
 
 const (
