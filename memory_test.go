@@ -10,7 +10,7 @@ import (
 
 func TestMemoryStorageStorage_Failure(t *testing.T) {
 	t.Run("expected to increment the failure count and last error at", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{FailureRateThreshold: 10})
+		ms := NewMemoryStorage(WithFailureRateThreshold(10))
 
 		err := ms.Failure(context.Background(), 5)
 		assert.Nil(t, err)
@@ -21,7 +21,7 @@ func TestMemoryStorageStorage_Failure(t *testing.T) {
 	})
 
 	t.Run("expected to increment the failure count and last error at and change state to close", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{FailureRateThreshold: 5})
+		ms := NewMemoryStorage(WithFailureRateThreshold(5))
 
 		err := ms.Failure(context.Background(), 10)
 		assert.Nil(t, err)
@@ -34,7 +34,7 @@ func TestMemoryStorageStorage_Failure(t *testing.T) {
 
 func TestMemoryStorageStorage_Success(t *testing.T) {
 	t.Run("state is close, expect to do nothing", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{})
+		ms := NewMemoryStorage()
 
 		err := ms.Success(context.Background(), 1)
 		assert.Nil(t, err)
@@ -45,7 +45,7 @@ func TestMemoryStorageStorage_Success(t *testing.T) {
 	})
 
 	t.Run("state is open, expect to only increment the success count", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{OpenWindow: 1 * time.Minute, SuccessRateThreshold: 2})
+		ms := NewMemoryStorage(WithOpenWindow(1*time.Minute), WithSuccessRateThreshold(2))
 		ms.state.Store(int64(StateOpen))
 		ms.lastErrorAt.Store(time.Now().UTC())
 
@@ -58,7 +58,7 @@ func TestMemoryStorageStorage_Success(t *testing.T) {
 	})
 
 	t.Run("state is open, change state to close if last error happened befor openwindow", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{SuccessRateThreshold: 10, OpenWindow: 5 * time.Minute})
+		ms := NewMemoryStorage(WithSuccessRateThreshold(10), WithOpenWindow(5*time.Minute))
 		ms.state.Store(int64(StateOpen))
 		ms.lastErrorAt.Store(time.Now().UTC().Add(-5 * time.Minute))
 
@@ -71,7 +71,8 @@ func TestMemoryStorageStorage_Success(t *testing.T) {
 	})
 
 	t.Run("state is open and we in the half open window, expect to change state to half open", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{SuccessRateThreshold: 10, OpenWindow: 6 * time.Minute, HalfOpenWindow: 3 * time.Minute})
+		ms := NewMemoryStorage(WithSuccessRateThreshold(10), WithOpenWindow(6*time.Minute), WithHalfOpenWindow(3*time.Minute))
+
 		ms.state.Store(int64(StateOpen))
 		lastErrAt := time.Now().UTC().Add(-ms.options.HalfOpenWindow)
 		ms.lastErrorAt.Store(lastErrAt)
@@ -87,7 +88,7 @@ func TestMemoryStorageStorage_Success(t *testing.T) {
 
 func TestMemorystorage_getstatus(t *testing.T) {
 	t.Run("expected to return the stored state and do nothing", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{})
+		ms := NewMemoryStorage()
 		ms.state.Store(int64(StateClose))
 
 		cState, err := ms.GetState(context.Background())
@@ -98,7 +99,7 @@ func TestMemorystorage_getstatus(t *testing.T) {
 
 func TestMemoryStorageStorage_Reset(t *testing.T) {
 	t.Run("exptecte to set failure, success, last error at to default value (0)", func(t *testing.T) {
-		ms := NewMemoryStorage(&Options{State: StateClose})
+		ms := NewMemoryStorage()
 		ms.failures.Store(20)
 		ms.success.Store(10)
 		ms.lastErrorAt.Store(time.Now())

@@ -15,30 +15,38 @@ const (
 var _ Storage = &RedisStorage{}
 
 // NewRedisStorage create new instance of RedisStorage.
-func NewRedisStorage(client *redis.Client, options Options) *RedisStorage {
-	return &RedisStorage{client: client, options: options}
+func NewRedisStorage(client *redis.Client, options ...StorageOption) *RedisStorage {
+	storage := RedisStorage{client: client}
+
+	for _, op := range options {
+		op(&storage.options)
+	}
+
+	storage.serviceKey = namespace(storage.options.Service)
+
+	return &storage
 }
 
 // RedisStorage is redis based storage for circuit breaker and is concurrent safe.
 type RedisStorage struct {
-	client  *redis.Client
-	options Options
+	client     *redis.Client
+	options    StorageOptions
+	serviceKey string
 }
 
 // Failure is responsible to store failures.
 func (r *RedisStorage) Failure(ctx context.Context, delta int64) error {
-	keyName := namespace(r.options.Service)
 
 	pipe := r.client.Pipeline()
-	pipe.HIncrBy(ctx, keyName, failuresField, delta)
-	pipe.Expire(ctx, keyName, r.options.OpenWindow)
+	pipe.HIncrBy(ctx, r.serviceKey, failuresField, delta)
+	pipe.Expire(ctx, r.serviceKey, r.options.OpenWindow)
 
 	return r.pipeExec(ctx, pipe)
 }
 
 // Success is responsible to store success.
 func (r *RedisStorage) Success(ctx context.Context, delta int64) error {
-	sCount, err := r.client.HIncrBy(ctx, namespace(r.options.Service), successField, delta).Result()
+	sCount, err := r.client.HIncrBy(ctx, r.serviceKey, successField, delta).Result()
 	if err != nil {
 		return err
 	}
@@ -70,7 +78,7 @@ func (r *RedisStorage) pipeExec(ctx context.Context, pipe redis.Pipeliner) error
 // if we are in halfOpen window == halfOpen
 // if key exist and not in halfOpen window and errors count reached the limit == open.
 func (r *RedisStorage) GetState(ctx context.Context) (State, error) {
-	duration, err := r.client.PTTL(ctx, namespace(r.options.Service)).Result()
+	duration, err := r.client.PTTL(ctx, r.serviceKey).Result()
 	if err != nil {
 		return StateClose, err
 	}
@@ -97,7 +105,7 @@ func (r *RedisStorage) GetState(ctx context.Context) (State, error) {
 }
 
 func (r *RedisStorage) reachRateLimit(ctx context.Context) (bool, error) {
-	fCount, err := r.client.HGet(ctx, namespace(r.options.Service), failuresField).Int64()
+	fCount, err := r.client.HGet(ctx, r.serviceKey, failuresField).Int64()
 	if errors.Is(err, redis.Nil) {
 		return false, nil
 	}
@@ -111,5 +119,5 @@ func (r *RedisStorage) reachRateLimit(ctx context.Context) (bool, error) {
 
 // Reset storage.
 func (r *RedisStorage) Reset(ctx context.Context) error {
-	return r.client.Del(ctx, namespace(r.options.Service)).Err()
+	return r.client.Del(ctx, r.serviceKey).Err()
 }

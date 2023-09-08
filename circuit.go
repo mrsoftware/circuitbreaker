@@ -20,14 +20,14 @@ type Circuit struct {
 }
 
 // NewCircuit breaker.
-func NewCircuit(options ...Option) Circuit {
+func NewCircuit(options ...Option) *Circuit {
 	circuit := Circuit{ops: Options{}}
 
 	for _, op := range options {
 		op(&circuit.ops)
 	}
 
-	return circuit
+	return &circuit
 }
 
 // Stat is used for monitoring.

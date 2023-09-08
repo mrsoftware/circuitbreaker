@@ -26,8 +26,11 @@ const (
 type Options struct {
 	Storage Storage
 	Logger  Logger
-	Service string
 	State   State
+}
+
+type StorageOptions struct {
+	Service string
 	// FailureRateThreshold haw many error to consider circuit as open
 	FailureRateThreshold int64
 	// SuccessRateThreshold how much success to consider circuit as full close
@@ -40,22 +43,28 @@ type Options struct {
 	// TODO 03.04.22 mrsoftware: do we need error weight?
 }
 
-func WithDefaultOptions() Option {
-	return func(o *Options) {
+func StorageWithDefaultOptions() StorageOption {
+	return func(o *StorageOptions) {
 		o.OpenWindow = DefaultHalfOpenWindow
 		o.HalfOpenWindow = DefaultHalfOpenWindow
 		o.FailureRateThreshold = DefaultFailureRateThreshold
 		o.SuccessRateThreshold = DefaultSuccessRateThreshold
+	}
+}
+
+func WithDefaultOptions() Option {
+	return func(o *Options) {
 		o.State = DefaultState
-		o.Storage = NewMemoryStorage(o)
+		o.Storage = NewMemoryStorage(StorageWithDefaultOptions())
 		o.Logger = NewIOLogger(os.Stdout, OutPutTypeSimple)
 	}
 }
 
+type StorageOption func(*StorageOptions)
 type Option func(*Options)
 
-func WithServiceName(service string) Option {
-	return func(o *Options) {
+func WithServiceName(service string) StorageOption {
+	return func(o *StorageOptions) {
 		o.Service = service
 	}
 }
@@ -78,26 +87,26 @@ func WithDefaultState(state State) Option {
 	}
 }
 
-func WithFailureRateThreshold(rate int64) Option {
-	return func(o *Options) {
+func WithFailureRateThreshold(rate int64) StorageOption {
+	return func(o *StorageOptions) {
 		o.FailureRateThreshold = rate
 	}
 }
 
-func WithSuccessRateThreshold(rate int64) Option {
-	return func(o *Options) {
+func WithSuccessRateThreshold(rate int64) StorageOption {
+	return func(o *StorageOptions) {
 		o.SuccessRateThreshold = rate
 	}
 }
 
-func WithOpenWindow(duration time.Duration) Option {
-	return func(o *Options) {
+func WithOpenWindow(duration time.Duration) StorageOption {
+	return func(o *StorageOptions) {
 		o.OpenWindow = duration
 	}
 }
 
-func WithHalfOpenWindow(duration time.Duration) Option {
-	return func(o *Options) {
+func WithHalfOpenWindow(duration time.Duration) StorageOption {
+	return func(o *StorageOptions) {
 		o.HalfOpenWindow = duration
 	}
 }

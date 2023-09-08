@@ -2,7 +2,6 @@ package circuitbreaker
 
 import (
 	"context"
-	"fmt"
 )
 
 // Storage is what circut breaker use to store it state.
@@ -20,10 +19,9 @@ const (
 )
 
 const (
-	storagePrefix   = "circuitBreaker"
-	namespaceFormat = "%s:%s" // storagePrefix , operation
+	storagePrefix = "circuitBreaker:"
 )
 
-func namespace(operation string) string {
-	return fmt.Sprintf(namespaceFormat, storagePrefix, operation)
+func namespace(service string) string {
+	return storagePrefix + service
 }

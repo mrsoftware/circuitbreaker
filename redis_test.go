@@ -19,20 +19,21 @@ const (
 )
 
 var (
-	serviceName = "test"
-	options     = circuitbreaker.Options{
-		Service:              serviceName,
-		State:                circuitbreaker.StateClose,
-		FailureRateThreshold: 2,
-		SuccessRateThreshold: 2,
-		OpenWindow:           circuitbreaker.DefaultOpenWindow,
-		HalfOpenWindow:       circuitbreaker.DefaultHalfOpenWindow,
+	serviceName                = "test"
+	failureRateThreshold int64 = 2
+	successRateThreshold int64 = 2
+	options                    = []circuitbreaker.StorageOption{
+		circuitbreaker.WithServiceName(serviceName),
+		circuitbreaker.WithFailureRateThreshold(failureRateThreshold),
+		circuitbreaker.WithSuccessRateThreshold(successRateThreshold),
+		circuitbreaker.WithOpenWindow(circuitbreaker.DefaultOpenWindow),
+		circuitbreaker.WithHalfOpenWindow(circuitbreaker.DefaultHalfOpenWindow),
 	}
 )
 
 func TestRedisStorage_GetStatus(t *testing.T) {
 	redisClient, mock := redismock.NewClientMock()
-	rs := circuitbreaker.NewRedisStorage(redisClient, options)
+	rs := circuitbreaker.NewRedisStorage(redisClient, options...)
 
 	t.Run("key expired or not exits == close", func(t *testing.T) {
 		mock.ExpectPTTL(tempkey).SetVal(-1)
@@ -52,7 +53,7 @@ func TestRedisStorage_GetStatus(t *testing.T) {
 
 	t.Run("key exist and not in halfOpen window and errors count reached the limit == open", func(t *testing.T) {
 		mock.ExpectPTTL(tempkey).SetVal(time.Second * 40)
-		mock.ExpectHGet(tempkey, failuresField).SetVal(strconv.Itoa(int(options.FailureRateThreshold)))
+		mock.ExpectHGet(tempkey, failuresField).SetVal(strconv.Itoa(int(failureRateThreshold)))
 
 		state, err := rs.GetState(context.Background())
 		assert.Nil(t, err)
@@ -71,18 +72,18 @@ func TestRedisStorage_GetStatus(t *testing.T) {
 
 func TestRedisStorage_Failure(t *testing.T) {
 	redisClient, mock := redismock.NewClientMock()
-	rs := circuitbreaker.NewRedisStorage(redisClient, options)
+	rs := circuitbreaker.NewRedisStorage(redisClient, options...)
 
 	t.Run("incr failure count to change state to open", func(t *testing.T) {
 
 		mock.ExpectHIncrBy(tempkey, failuresField, 2).SetVal(2)
-		mock.ExpectExpire(tempkey, options.OpenWindow).SetVal(true)
+		mock.ExpectExpire(tempkey, circuitbreaker.DefaultOpenWindow).SetVal(true)
 
 		err := rs.Failure(context.Background(), 2)
 		assert.Nil(t, err)
 
 		mock.ExpectPTTL(tempkey).SetVal(time.Second * 40)
-		mock.ExpectHGet(tempkey, failuresField).SetVal(strconv.Itoa(int(options.FailureRateThreshold)))
+		mock.ExpectHGet(tempkey, failuresField).SetVal(strconv.Itoa(int(failureRateThreshold)))
 
 		state, err := rs.GetState(context.Background())
 		assert.Nil(t, err)
@@ -93,7 +94,7 @@ func TestRedisStorage_Failure(t *testing.T) {
 
 func TestRedisStorage_Success(t *testing.T) {
 	redisClient, mock := redismock.NewClientMock()
-	rs := circuitbreaker.NewRedisStorage(redisClient, options)
+	rs := circuitbreaker.NewRedisStorage(redisClient, options...)
 
 	t.Run("incr success count to change state to close", func(t *testing.T) {
 		mock.ExpectHIncrBy(tempkey, successField, 1).SetVal(1)
