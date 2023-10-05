@@ -40,7 +40,6 @@ type StorageOptions struct {
 	OpenWindow time.Duration
 	// HalfOpenWindow is the duration of circuit halfOpen state will last
 	HalfOpenWindow time.Duration
-	// TODO 03.04.22 mrsoftware: do we need error weight?
 }
 
 func StorageWithDefaultOptions() StorageOption {
