@@ -173,3 +173,58 @@ func TestCircuitBreaker_Do(t *testing.T) {
 		storage.AssertExpectations(t)
 	})
 }
+
+func TestCircuitBreaker_Stat(t *testing.T) {
+	t.Run("expect success to have value", func(t *testing.T) {
+		storage := &mock.Storage{}
+
+		breaker := circuitbreaker.NewCircuit(
+			circuitbreaker.WithStorage(storage),
+			circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
+		)
+
+		storage.On("GetState", context.Background()).Return(circuitbreaker.StateClose, nil).Twice()
+
+		breaker.Done(context.Background(), nil)
+
+		stat := breaker.Stat(context.Background())
+		assert.Equal(t, circuitbreaker.Stat{Success: 1, Failure: 0, State: circuitbreaker.StateClose}, stat)
+
+		storage.AssertExpectations(t)
+	})
+
+	t.Run("expect failure to have value", func(t *testing.T) {
+		storage := &mock.Storage{}
+
+		breaker := circuitbreaker.NewCircuit(
+			circuitbreaker.WithStorage(storage),
+			circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
+		)
+
+		storage.On("GetState", context.Background()).Return(circuitbreaker.StateOpen, nil).Once()
+		storage.On("Failure", context.Background(), int64(1)).Return(nil).Once()
+
+		breaker.Done(context.Background(), errors.New("single error to increase failure"))
+
+		stat := breaker.Stat(context.Background())
+		assert.Equal(t, circuitbreaker.Stat{Failure: 1, Success: 0, State: circuitbreaker.StateOpen}, stat)
+
+		storage.AssertExpectations(t)
+	})
+
+	t.Run("expect state have open as its value", func(t *testing.T) {
+		storage := &mock.Storage{}
+
+		breaker := circuitbreaker.NewCircuit(
+			circuitbreaker.WithStorage(storage),
+			circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
+		)
+
+		storage.On("GetState", context.Background()).Return(circuitbreaker.StateHalfOpen, nil).Once()
+
+		stat := breaker.Stat(context.Background())
+		assert.Equal(t, circuitbreaker.Stat{State: circuitbreaker.StateHalfOpen}, stat)
+
+		storage.AssertExpectations(t)
+	})
+}
