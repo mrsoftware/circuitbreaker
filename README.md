@@ -96,9 +96,3 @@ cb := circuitbreaker.NewCircuit(circuitbreaker.WithDefaultOptions())
 stat := cb.Stat(context.Background())
 
 ```
-
-
-## Roadmap
-- [ ]  Health checker option
-- [x]  Stat (State, failures, success)
-
