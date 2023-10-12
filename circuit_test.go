@@ -18,7 +18,7 @@ func TestCircuitbreaker_IS(t *testing.T) {
 	breaker := circuitbreaker.NewCircuit(
 		circuitbreaker.WithStorage(storage),
 		circuitbreaker.WithLogger(logger),
-		circuitbreaker.WithDefaultState(circuitbreaker.StateClose),
+		circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
 	)
 
 	t.Run("expect storage to not fails and state is what asked", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestCircuitbreaker_Done(t *testing.T) {
 	breaker := circuitbreaker.NewCircuit(
 		circuitbreaker.WithStorage(storage),
 		circuitbreaker.WithLogger(logger),
-		circuitbreaker.WithDefaultState(circuitbreaker.StateClose),
+		circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
 	)
 
 	t.Run("done with error, expect to increase failure", func(t *testing.T) {
@@ -134,7 +134,7 @@ func TestCircuitBreaker_Do(t *testing.T) {
 	breaker := circuitbreaker.NewCircuit(
 		circuitbreaker.WithStorage(storage),
 		circuitbreaker.WithLogger(logger),
-		circuitbreaker.WithDefaultState(circuitbreaker.StateClose),
+		circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
 	)
 
 	t.Run("circuit is close/available, expect to work and get expected result", func(t *testing.T) {
