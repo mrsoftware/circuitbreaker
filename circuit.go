@@ -111,7 +111,8 @@ func (s *Circuit) Do(ctx context.Context, fn Fn) (res interface{}, err error) {
 	if !s.IsAvailable(ctx) {
 		return nil, ErrIsOpen
 	}
-	defer s.Done(ctx, err)
+
+	defer func() { s.Done(ctx, err) }()
 
 	return fn()
 }

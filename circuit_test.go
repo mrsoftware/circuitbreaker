@@ -129,11 +129,9 @@ func TestCircuitbreaker_Done(t *testing.T) {
 
 func TestCircuitBreaker_Do(t *testing.T) {
 	storage := &mock.Storage{}
-	logger := &mock.Logger{}
 
 	breaker := circuitbreaker.NewCircuit(
 		circuitbreaker.WithStorage(storage),
-		circuitbreaker.WithLogger(logger),
 		circuitbreaker.WithFallbackState(circuitbreaker.StateClose),
 	)
 
@@ -147,6 +145,22 @@ func TestCircuitBreaker_Do(t *testing.T) {
 		response, err := breaker.Do(context.Background(), fn)
 		assert.Equal(t, expectedErr, err)
 		assert.Equal(t, expectedRes, response)
+
+		storage.AssertExpectations(t)
+	})
+
+	t.Run("circuit is close/available, but service call is failed, expect to record error", func(t *testing.T) {
+		storage.On("GetState", context.Background()).Return(circuitbreaker.StateClose, nil).Once() // is called in is available
+		storage.On("Failure", context.Background(), int64(1)).Return(nil).Once()
+
+		fn := func() (interface{}, error) { return nil, errors.New("service faild") }
+		expectedRes, expectedErr := fn()
+
+		response, err := breaker.Do(context.Background(), fn)
+		assert.Equal(t, expectedErr, err)
+		assert.Equal(t, expectedRes, response)
+
+		storage.AssertExpectations(t)
 	})
 
 	t.Run("circuit is not available, expect to get ErrIsOpen Error", func(t *testing.T) {
@@ -155,5 +169,7 @@ func TestCircuitBreaker_Do(t *testing.T) {
 		response, err := breaker.Do(context.Background(), nil)
 		assert.Nil(t, response)
 		assert.Equal(t, circuitbreaker.ErrIsOpen, err)
+
+		storage.AssertExpectations(t)
 	})
 }
