@@ -87,9 +87,18 @@ func Get(ctx context.Context, url string) (res []byte, err error) {
 	return response.([]byte), nil
 }
 ```
+### Stat
+you can get circuit stat by calling `Stat` method on `Circuit` like below:
+
+```Go
+cb := circuitbreaker.NewCircuit(circuitbreaker.WithDefaultOptions())
+
+stat := cb.Stat(context.Background())
+
+```
 
 
 ## Roadmap
 - [ ]  Health checker option
-- [ ]  More Stat (failures, success)
+- [x]  Stat (State, failures, success)
 
