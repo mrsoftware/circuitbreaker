@@ -7,8 +7,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var _ circuitbreaker.Manager = &Circuit{}
+
 type Circuit struct {
 	mock.Mock
+}
+
+func (c *Circuit) Stat(ctx context.Context) circuitbreaker.Stat {
+	return c.Called(ctx).Get(0).(circuitbreaker.Stat)
 }
 
 func (c *Circuit) Do(ctx context.Context, fn circuitbreaker.Fn) (interface{}, error) {

@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var _ circuitbreaker.Storage = &Storage{}
+
 type Storage struct {
 	mock.Mock
 }

@@ -1,6 +1,11 @@
 package mock
 
-import "github.com/stretchr/testify/mock"
+import (
+	"github.com/mrsoftware/circuitbreaker"
+	"github.com/stretchr/testify/mock"
+)
+
+var _ circuitbreaker.Logger = &Logger{}
 
 type Logger struct {
 	mock.Mock
