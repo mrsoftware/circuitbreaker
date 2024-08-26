@@ -9,8 +9,10 @@ import (
 )
 
 func TestMemoryStorageStorage_Failure(t *testing.T) {
-	t.Run("expected to increment the failure count and last error at", func(t *testing.T) {
+	t.Run("expected to increment the failure count and last error at and reset success", func(t *testing.T) {
 		ms := NewMemoryStorage(WithFailureRateThreshold(10))
+
+		ms.success.Store(1)
 
 		err := ms.Failure(context.Background(), 5)
 		assert.Nil(t, err)
@@ -47,7 +49,7 @@ func TestMemoryStorageStorage_Success(t *testing.T) {
 	})
 }
 
-func TestMemorystorage_getstatus(t *testing.T) {
+func TestMemoryStorage_GetState(t *testing.T) {
 	t.Run("the last error is expired, expect to reset the circuit", func(t *testing.T) {
 		ms := NewMemoryStorage(WithOpenWindow(10 * time.Minute))
 		ms.lastErrorAt.Store(time.Now().UTC().Add(-11 * time.Minute))

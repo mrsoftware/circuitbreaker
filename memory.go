@@ -34,6 +34,7 @@ type MemoryStorage struct {
 func (m *MemoryStorage) Failure(ctx context.Context, delta int64) error {
 	m.lastErrorAt.Store(time.Now().UTC())
 	m.failures.Add(delta)
+	m.success.Store(0)
 
 	return nil
 }

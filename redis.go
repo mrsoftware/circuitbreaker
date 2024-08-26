@@ -39,6 +39,7 @@ func (r *RedisStorage) Failure(ctx context.Context, delta int64) error {
 
 	pipe := r.client.Pipeline()
 	pipe.HIncrBy(ctx, r.serviceKey, failuresField, delta)
+	pipe.HDel(ctx, r.serviceKey, successField)
 	pipe.Expire(ctx, r.serviceKey, r.options.OpenWindow)
 
 	return r.pipeExec(ctx, pipe)
