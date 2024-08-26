@@ -77,6 +77,7 @@ func TestRedisStorage_Failure(t *testing.T) {
 	t.Run("incr failure count to change state to open", func(t *testing.T) {
 
 		mock.ExpectHIncrBy(tempkey, failuresField, 2).SetVal(2)
+		mock.ExpectHDel(tempkey, successField).SetVal(2)
 		mock.ExpectExpire(tempkey, circuitbreaker.DefaultOpenWindow).SetVal(true)
 
 		err := rs.Failure(context.Background(), 2)
