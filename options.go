@@ -44,7 +44,7 @@ type StorageOptions struct {
 
 func StorageWithDefaultOptions() StorageOption {
 	return func(o *StorageOptions) {
-		o.OpenWindow = DefaultHalfOpenWindow
+		o.OpenWindow = DefaultOpenWindow
 		o.HalfOpenWindow = DefaultHalfOpenWindow
 		o.FailureRateThreshold = DefaultFailureRateThreshold
 		o.SuccessRateThreshold = DefaultSuccessRateThreshold
